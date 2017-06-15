@@ -45,12 +45,17 @@ func (p *PointSvc) CreatePoint(ctx context.Context, in *pb.Point) (*empty.Empty,
 
 // GetPointsByThing gets all points for a given user & thing
 func (p *PointSvc) GetPointsByThing(ctx context.Context, in *pb.ThingId) (*pb.InfluxResult, error) {
-	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE thing_id = %s AND time < %s AND time > %s",
+	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE \"thing_id\" = '%s'",
 		in.GetUser(),
 		in.GetThingId(),
-		time.Unix(in.GetEnd().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
-		time.Unix(in.GetStart().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
 	)
+	if in.GetEnd().GetSeconds() != 0 {
+		cmd = cmd + fmt.Sprintf(" AND time < '%s'", time.Unix(in.GetEnd().GetSeconds(), 0).Format(time.RFC3339Nano))
+	}
+	if in.GetStart().GetSeconds() != 0 {
+		cmd = cmd + fmt.Sprintf(" AND time > '%s'", time.Unix(in.GetStart().GetSeconds(), 0).Format(time.RFC3339Nano))
+	}
+	fmt.Println(cmd)
 	res, err := p.Db.QueryDB(cmd)
 	if err != nil {
 		return nil, err
@@ -64,11 +69,11 @@ func (p *PointSvc) GetPointsByThing(ctx context.Context, in *pb.ThingId) (*pb.In
 
 // GetPointsByGroup get all points for a given group
 func (p *PointSvc) GetPointsByGroup(ctx context.Context, in *pb.GroupId) (*pb.InfluxResult, error) {
-	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE group_id = %s AND time < %s AND time > %s",
+	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE group_id = '%s' AND time < '%s' AND time > '%s'",
 		in.GetUser(),
 		in.GetGroupId(),
-		time.Unix(in.GetEnd().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
-		time.Unix(in.GetStart().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
+		time.Unix(in.GetEnd().GetSeconds(), 0).Format(time.RFC3339Nano),
+		time.Unix(in.GetStart().GetSeconds(), 0).Format(time.RFC3339Nano),
 	)
 	res, err := p.Db.QueryDB(cmd)
 	if err != nil {
