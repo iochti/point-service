@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
@@ -42,13 +44,41 @@ func (p *PointSvc) CreatePoint(ctx context.Context, in *pb.Point) (*empty.Empty,
 }
 
 // GetPointsByThing gets all points for a given user & thing
-func (p *PointSvc) GetPointsByThing(in *pb.ThingId, stream pb.PointSvc_GetPointsByThingServer) error {
-	return nil
+func (p *PointSvc) GetPointsByThing(ctx context.Context, in *pb.ThingId) (*pb.InfluxResult, error) {
+	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE thing_id = %s AND time < %s AND time > %s",
+		in.GetUser(),
+		in.GetThingId(),
+		time.Unix(in.GetEnd().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
+		time.Unix(in.GetStart().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
+	)
+	res, err := p.Db.QueryDB(cmd)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := json.Marshal(res)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.InfluxResult{Item: bytes}, nil
 }
 
 // GetPointsByGroup get all points for a given group
-func (p *PointSvc) GetPointsByGroup(in *pb.GroupId, stream pb.PointSvc_GetPointsByGroupServer) error {
-	return nil
+func (p *PointSvc) GetPointsByGroup(ctx context.Context, in *pb.GroupId) (*pb.InfluxResult, error) {
+	cmd := fmt.Sprintf("SELECT * FROM \"%s\" WHERE group_id = %s AND time < %s AND time > %s",
+		in.GetUser(),
+		in.GetGroupId(),
+		time.Unix(in.GetEnd().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
+		time.Unix(in.GetStart().GetSeconds(), 0).Format("yyyy-MM-dd HH:mm:ss"),
+	)
+	res, err := p.Db.QueryDB(cmd)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := json.Marshal(res)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.InfluxResult{Item: bytes}, nil
 
 }
 

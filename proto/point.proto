@@ -10,8 +10,12 @@ import "google/protobuf/any.proto";
 
 service PointSvc {
   rpc CreatePoint(Point) returns (google.protobuf.Empty) {}
-  rpc GetPointsByThing(ThingId) returns (stream Point) {}
-  rpc GetPointsByGroup(GroupId) returns (stream Point) {}
+  rpc GetPointsByThing(ThingId) returns (InfluxResult) {}
+  rpc GetPointsByGroup(GroupId) returns (InfluxResult) {}
+}
+
+message InfluxResult {
+  bytes item = 1;
 }
 
 message Point {
