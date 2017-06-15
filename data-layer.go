@@ -29,6 +29,8 @@ func (i *InfluxDL) Init() error {
 	DBName = flag.String("influx-db-name", "iochti", "Influx default database name")
 	username := flag.String("influx-user", "iochti", "Influx username")
 	inflxPwd := flag.String("influx-pwd", "", "Influx user's password")
+	flag.Parse()
+	fmt.Println(*url, *DBName, *username, *inflxPwd)
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     fmt.Sprintf("http://%s:8086", *url),
 		Username: *username,
